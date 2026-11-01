@@ -1,0 +1,4 @@
+{
+  "name": "sapper-local",
+  "plugins": [{"name":"sapper","source":"./sapper","version":"0.1.0","description":"Operate a local Sapper Pi task through ZCode.","displayName":"Sapper","displayName_i18n":{"zh-CN":"Sapper 任务工作流"},"category":"developer-tools"}]
+}

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sapper 本地观测</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121b2e;--border:#29344f;--text:#e0e7f3;--muted:#a9b7cf;--accent:#71d8ff;--green:#7ee2b8}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui}header{padding:22px 32px;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}h1{margin:0;font-size:25px}small,.muted{color:var(--muted)}main{padding:22px 32px}h2{font-size:18px;margin:22px 0 10px}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:10px 0}button,select,input{background:#203754;color:white;border:1px solid #52739c;border-radius:5px;padding:9px 11px;font:inherit}button{cursor:pointer}button:hover{background:#2a496c}input{min-width:min(360px,80vw)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:14px;max-height:430px;overflow:auto;font:12px/1.55 Consolas,monospace}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:14px}.pane, .finding-card, .report-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px}.pane h3{margin:0 0 8px}.finding-list{display:grid;gap:10px;margin:12px 0}.finding-card{padding:0;overflow:hidden}.finding-card summary{cursor:pointer;list-style:none;padding:14px;font-weight:650}.finding-card summary::-webkit-details-marker{display:none}.finding-card summary:after{content:'＋';float:right;color:var(--accent)}.finding-card[open] summary:after{content:'−'}.finding-id{color:var(--accent);margin-right:8px}.finding-preview{display:block;color:var(--muted);font-weight:400;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere}.finding-body{border-top:1px solid var(--border);padding:12px 14px}.finding-body pre{max-height:520px;margin:0 0 10px}.empty{padding:18px;border:1px dashed #52627c;border-radius:8px;color:var(--muted)}.danger{color:#ffca8a}iframe{height:620px;width:100%;border:1px solid var(--border);border-radius:7px}#status{color:var(--green)}@media(max-width:650px){header,main{padding:16px}iframe{height:520px}}
+textarea{box-sizing:border-box;width:100%;resize:vertical;background:#0c1628;color:var(--text);border:1px solid #52739c;border-radius:5px;padding:9px 11px;font:inherit;min-height:65px}.task-form{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}.task-form label{display:grid;gap:5px;color:var(--muted)}.task-form input{box-sizing:border-box;width:100%;min-width:0}.task-form .wide{grid-column:1/-1}.task-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:10px}.task-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-wrap:anywhere}.task-card.active{border-color:var(--accent)}.task-card h3{margin:0 0 5px}.task-card p{margin:5px 0}.task-status{color:var(--accent);font-size:12px}.feedback{min-height:1.5em;color:var(--muted)}button:disabled{opacity:.5;cursor:wait}.command-input{flex:1;min-width:min(300px,80vw)}
+:root{color-scheme:light dark;--bg:#fff;--panel:#f5f5f5;--border:#d4d4d4;--text:#171717;--muted:#525252;--accent:#075a9c;--green:#17633f;--control:#fff;--control-hover:#e8e8e8;--control-border:#a3a3a3;--danger:#9a4200}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--panel:#171717;--border:#404040;--text:#f5f5f5;--muted:#bdbdbd;--accent:#8acbff;--green:#8cdeb0;--control:#242424;--control-hover:#383838;--control-border:#707070;--danger:#ffca8a}}
+button,select,input,textarea{background:var(--control);color:var(--text);border-color:var(--control-border)}button:hover{background:var(--control-hover)}.empty{border-color:var(--control-border)}.danger{color:var(--danger)}iframe{background:var(--panel)}
+dialog{width:min(850px,calc(100vw - 48px));max-height:90vh;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:20px}dialog::backdrop{background:#0009}dialog h2{margin:0}.dialog-header{display:flex;justify-content:space-between;align-items:center;gap:12px}.commander-output{height:260px;max-height:35vh;overflow:auto}#task-message{min-height:110px}
+</style>
+<header><h1>Sapper · 本地运行观测</h1><small>通用任务 · Finding、战况与终端实时可查</small><span id="status">连接中…</span></header>
+<main>
+  <section aria-labelledby="provider-title"><h2 id="provider-title">模型供应商配置</h2><div class="report-box"><form id="provider-form" class="task-form">
+    <label>Base URL<input id="provider-base" type="url" required autocomplete="off" placeholder="http://127.0.0.1:3425/v1"></label>
+    <label>模型 ID<input id="provider-model" required maxlength="256" autocomplete="off" placeholder="供应商的模型名称"></label>
+    <label class="wide">API Key<input id="provider-key" type="password" autocomplete="new-password" placeholder="已配置；留空则保持原 Key"></label>
+    <div class="wide"><button id="provider-save" type="submit">保存供应商配置</button><p class="muted">新启动的任务使用此配置；正在运行的任务保持原配置。地址使用 localhost 或 127.0.0.1 时，容器会连接宿主机对应端口。</p><div id="provider-feedback" class="feedback" aria-live="polite"></div></div>
+  </form></div></section>
+  <section aria-labelledby="new-task-title">
+    <h2 id="new-task-title">新建任务</h2>
+    <div class="report-box"><form id="create-task" class="task-form">
+      <div class="wide"><button id="create-button" type="submit">新建任务并打开 Commander</button> <span class="muted">自动创建独立事实图和会话，在原生 Pi 终端中输入任务目标与授权范围。</span><div id="create-feedback" class="feedback" aria-live="polite"></div></div>
+    </form></div>
+  </section>
+  <section aria-labelledby="task-list-title"><h2 id="task-list-title">任务列表</h2><p class="muted">选择任务查看对应的报告、图和终端。历史任务保留原会话记录。</p><div class="toolbar"><input id="task-search" type="search" placeholder="搜索任务 ID 或目标"></div><div id="task-cards" class="task-cards"></div></section>
+  <section aria-labelledby="findings-title">
+    <h2 id="findings-title">漏洞 Finding</h2>
+    <div class="toolbar"><label for="task">任务</label><select id="task"></select><input id="search" type="search" placeholder="搜索编号、标题或报告内容"><button id="reload-findings">刷新 Finding</button><button id="download-report">下载完整报告</button></div>
+    <div class="muted" id="finding-meta" aria-live="polite">请选择任务</div>
+    <div class="finding-list" id="finding-list"></div>
+    <div class="report-box"><h3>完整 Markdown 报告</h3><div class="toolbar"><button id="copy-report">复制完整报告</button></div><pre id="full-report">请选择任务</pre></div>
+  </section>
+  <section><h2>战况板</h2><p class="muted">选择任务后展示其会话；旧任务会显示原 Commander 会话。</p><pre id="board"></pre><div class="grid" id="panes"></div></section>
+  <section><h2>恢复与运行日志</h2><pre id="log"></pre></section>
+  <section><h2>任务事实图</h2><button id="refresh-graph">刷新事实图</button><iframe id="graph" title="任务事实图"></iframe></section>
+</main>
+<script>
+const task=document.getElementById('task'), search=document.getElementById('search'), list=document.getElementById('finding-list');
+const report=document.getElementById('full-report'), meta=document.getElementById('finding-meta'), frame=document.getElementById('graph');
+let chosen='', reportText='', sectionsData=[], reportUpdated='', lastGraph=0, lastFindings=0, lastNames='';const openFindings=new Set();
+function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+async function postJSON(url,value){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||('请求失败 '+r.status));return d}
+async function loadProvider(){const feedback=document.getElementById('provider-feedback');try{const r=await fetch('/provider',{cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||r.status);document.getElementById('provider-base').value=d.base_url;document.getElementById('provider-model').value=d.model;document.getElementById('provider-key').placeholder=d.api_key_configured?'已配置；留空则保持原 Key':'请输入 API Key';feedback.textContent='当前保存的配置已载入。'}catch(e){feedback.textContent='读取配置失败：'+e.message}}
+document.getElementById('provider-form').onsubmit=async e=>{e.preventDefault();const button=document.getElementById('provider-save'),feedback=document.getElementById('provider-feedback'),key=document.getElementById('provider-key');button.disabled=true;feedback.textContent='正在保存…';try{await postJSON('/provider',{base_url:document.getElementById('provider-base').value,model:document.getElementById('provider-model').value,api_key:key.value});key.value='';feedback.textContent='已保存。新启动的任务会使用此配置。'}catch(err){feedback.textContent='保存失败：'+err.message}finally{button.disabled=false}};
+loadProvider();
+function selectTask(id){if(!Array.from(task.options).some(o=>o.value===id)){const o=node('option','',id);o.value=id;task.append(o)}chosen=id;task.value=id;task.onchange();renderTaskCards()}
+let taskRecords=[];
+function renderTaskCards(){const root=document.getElementById('task-cards'),q=document.getElementById('task-search').value.trim().toLocaleLowerCase();root.replaceChildren();const records=taskRecords.filter(x=>(x.id+' '+(x.goal||'')).toLocaleLowerCase().includes(q));if(!records.length){root.append(node('div','empty',taskRecords.length?'没有匹配的任务。':'还没有任务。'));return}for(const record of records){const card=node('article','task-card'+(record.id===chosen?' active':''));card.append(node('h3','',record.id));const status=record.isolated?(record.running===true?'独立会话已启动':record.running===false?'独立会话未启动':'容器未连接'):'历史任务';card.append(node('div','task-status',status));card.append(node('p','muted',record.goal||'未记录目标'));const actions=node('div','toolbar'),view=node('button','','查看');view.type='button';view.onclick=()=>selectTask(record.id);actions.append(view);if(record.isolated){const start=node('button','',record.running?'打开终端':'启动终端');start.type='button';start.onclick=async()=>{selectTask(record.id);start.disabled=true;const feedback=document.getElementById('create-feedback');feedback.textContent='正在启动 '+record.id+' 的终端…';try{await postJSON('/tasks/'+encodeURIComponent(record.id)+'/open',{});feedback.textContent='终端已启动：'+record.id;await loadTaskRecords()}catch(e){feedback.textContent='启动失败：'+e.message}finally{start.disabled=false}};actions.append(start)}card.append(actions);root.append(card)}}
+document.getElementById('task-search').oninput=renderTaskCards;
+async function loadTaskRecords(){try{const r=await fetch('/tasks',{cache:'no-store'});if(!r.ok)throw Error(r.status);const d=await r.json();taskRecords=d.tasks||[];renderTaskCards()}catch(e){document.getElementById('task-cards').replaceChildren(node('div','empty','任务列表暂不可用：'+e))}}
+document.getElementById('create-task').onsubmit=async e=>{e.preventDefault();const button=document.getElementById('create-button'),feedback=document.getElementById('create-feedback');button.disabled=true;feedback.textContent='正在创建任务并启动终端…';try{const id='task-'+new Date().toISOString().replace(/[^0-9]/g,'').slice(0,14)+'-'+crypto.randomUUID().slice(0,8);await postJSON('/tasks',{id,goal:'任务目标和授权范围由用户在 Commander 中提供',scope:'由用户在 Commander 中指定',excluded:''});await loadTaskRecords();selectTask(id);try{await postJSON('/tasks/'+encodeURIComponent(id)+'/open',{});feedback.textContent='已启动 '+id+' 的原生 Commander 终端。'}catch(err){feedback.textContent='任务已创建，但终端启动失败：'+err.message+'。可在任务列表重试。'}await loadTaskRecords()}catch(err){feedback.textContent='创建失败：'+err.message}finally{button.disabled=false}};
+async function refreshTaskRecords(){await loadTaskRecords();setTimeout(refreshTaskRecords,10000)}
+refreshTaskRecords();
+function renderFindings(){const q=search.value.trim().toLocaleLowerCase();list.replaceChildren();const shown=sectionsData.filter(x=>(x.id+' '+x.title+' '+x.body).toLocaleLowerCase().includes(q));
+  if(!shown.length){list.append(node('div','empty',sectionsData.length?'没有匹配的 Finding。':'报告没有按 F-xx/N-xx 标题组织；可在下方查看或下载完整报告。'));}
+  for(const f of shown){const card=node('details','finding-card'),summary=node('summary'),id=node('span','finding-id',f.id),key=f.id+'\n'+f.title;card.open=openFindings.has(key);card.ontoggle=()=>{if(card.open)openFindings.add(key);else openFindings.delete(key)};summary.append(id,document.createTextNode(f.title.replace(/^\S+\s*/,'')));const preview=node('span','finding-preview',(f.body||'暂无正文').slice(0,240));summary.append(preview);const body=node('div','finding-body'),pre=node('pre','',f.body||'暂无正文'),copy=node('button','',`复制 ${f.id}`);copy.onclick=async e=>{e.preventDefault();await navigator.clipboard.writeText(f.title+'\n\n'+f.body);copy.textContent='已复制';setTimeout(()=>copy.textContent=`复制 ${f.id}`,1200)};body.append(pre,copy);card.append(summary,body);list.append(card)}
+  meta.textContent=`${chosen} · ${sectionsData.length} 个报告条目 · 当前显示 ${shown.length} 个${reportUpdated?' · 更新于 '+reportUpdated:''}`;
+}
+async function loadFindings(){if(!task.value)return;chosen=task.value;const requestTask=chosen;reportText='';sectionsData=[];report.textContent='正在读取…';list.replaceChildren();meta.textContent='正在读取报告…';try{const r=await fetch('/findings?task='+encodeURIComponent(requestTask)+'&t='+Date.now(),{cache:'no-store'});const d=await r.json();if(task.value!==requestTask)return;if(!r.ok)throw Error(d.error||r.status);reportText=d.report||'';sectionsData=d.sections||[];reportUpdated=d.updated_at?new Date(d.updated_at*1000).toLocaleString():'';report.textContent=reportText||'该任务还没有 findings.md 报告。';renderFindings();lastFindings=Date.now();if(!reportText)meta.textContent=`${chosen} · 尚无报告`; }catch(e){if(task.value!==requestTask)return;meta.textContent='读取失败：'+e;report.textContent='';list.replaceChildren(node('div','empty','读取 Finding 失败，请刷新重试。'))}}
+function refreshGraph(){if(task.value){frame.src='/graph?task='+encodeURIComponent(task.value)+'&t='+Date.now();lastGraph=Date.now()}}
+task.onchange=()=>{openFindings.clear();chosen=task.value;renderTaskCards();document.getElementById('board').textContent=chosen?'正在切换任务…':'请选择任务';document.getElementById('panes').replaceChildren();document.getElementById('log').textContent='';if(!task.value){reportText='';sectionsData=[];reportUpdated='';report.textContent='请选择任务';meta.textContent='请选择任务';list.replaceChildren();frame.src='about:blank';return}loadFindings();refreshGraph()};search.oninput=renderFindings;document.getElementById('reload-findings').onclick=loadFindings;document.getElementById('refresh-graph').onclick=refreshGraph;
+document.getElementById('download-report').onclick=()=>{if(!reportText)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([reportText],{type:'text/markdown;charset=utf-8'}));a.download=chosen+'-findings.md';a.click();URL.revokeObjectURL(a.href)};
+document.getElementById('copy-report').onclick=async e=>{if(reportText){await navigator.clipboard.writeText(reportText);e.currentTarget.textContent='已复制完整报告';setTimeout(()=>e.currentTarget.textContent='复制完整报告',1200)}};
+async function tick(){
+  const requested=task.value;
+  try{
+    const r=await fetch('/snapshot?task='+encodeURIComponent(requested),{cache:'no-store'});
+    if(!r.ok)throw Error(r.status);
+    const s=await r.json();
+    const names=s.tasks.join('\n');
+    if(names!==lastNames){
+      lastNames=names;task.replaceChildren();const placeholder=node('option','','请选择任务');placeholder.value='';task.append(placeholder);
+      for(const n of s.tasks){const o=node('option','',n);o.value=n;task.append(o)}
+      if(s.tasks.includes(chosen))task.value=chosen;else {chosen='';task.value=''}
+      if(task.value){loadFindings();refreshGraph()}
+    }
+    if(task.value===requested){
+      document.getElementById('status').textContent=s.connected?'已连接 · '+new Date().toLocaleTimeString():'容器或任务会话未连接';
+      try{document.getElementById('board').textContent=JSON.stringify(JSON.parse(s.board),null,2)}catch{document.getElementById('board').textContent=s.board}
+      document.getElementById('log').textContent=s.log;
+      const root=document.getElementById('panes');root.replaceChildren();
+      for(const [n,t] of Object.entries(s.panes)){const sec=node('section','pane'),h=node('h3','',n),pre=node('pre','',t);sec.append(h,pre);root.append(sec)}
+      if(task.value && Date.now()-lastFindings>30000)loadFindings();
+      if(task.value && Date.now()-lastGraph>30000)refreshGraph();
+    }
+  }catch(e){if(task.value===requested)document.getElementById('status').textContent='连接失败：'+e}
+  setTimeout(tick,4000)
+}
+tick();
+</script>
+</html>

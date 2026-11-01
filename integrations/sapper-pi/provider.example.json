@@ -1,0 +1,6 @@
+{
+  "base_url": "http://127.0.0.1:3425/v1",
+  "container_anthropic_base_url": "http://host.docker.internal:3425/v1",
+  "model": "your-provider/your-model",
+  "api_key": "replace-locally"
+}

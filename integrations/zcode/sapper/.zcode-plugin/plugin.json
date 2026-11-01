@@ -1,0 +1,9 @@
+{
+  "name": "sapper",
+  "version": "0.1.0",
+  "description": "Operate isolated Sapper Pi tasks using the local Sapper service.",
+  "author": {"name": "Sapper contributors"},
+  "license": "MIT",
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json"
+}

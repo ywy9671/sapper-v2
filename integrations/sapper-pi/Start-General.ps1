@@ -31,6 +31,7 @@ if ($name -eq $containerName) {
     $env:SAPPER_MODEL_FLASH = $provider.model
     $env:SAPPER_MODEL_DS = $provider.model
     $dataRoot = Join-Path $PSScriptRoot 'data'
+    New-Item -ItemType Directory -Path $dataRoot -Force | Out-Null
     $argsList = @('run','-d','--name',$containerName,'--init','--mount',"type=bind,source=$dataRoot,target=/work",
       '-e','ANTHROPIC_BASE_URL','-e','ANTHROPIC_AUTH_TOKEN','-e','SAPPER_MODEL','-e','SAPPER_MODEL_FLASH','-e','SAPPER_MODEL_DS',
       '-e','SAPPER_MODE=general','-e','TZ=Asia/Shanghai','-e','HTTP_PROXY=','-e','HTTPS_PROXY=',

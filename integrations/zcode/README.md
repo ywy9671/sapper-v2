@@ -1,7 +1,7 @@
-# Sapper Pi and ZCode integration
+# Sapper and ZCode integration
 
-This branch adds a general-task Pi adapter and a ZCode plugin to upstream Sapper.
-The plugin is a client of the local adapter API, not an embedded Pi runtime.
+This branch adds a general-task Pi adapter and a separate ZCode harness plugin
+to upstream Sapper. The ZCode plugin uses ZCode agents; it does not launch Pi.
 Tasks share a container but have independent graphs, tmux servers and Pi state;
 this is not filesystem or network isolation. Existing reports are preserved.
 
@@ -35,8 +35,9 @@ service. `SAPPER_TOTAL_MINUTES` controls the upstream watchdog deadline.
 
 Add the `integrations/zcode` directory as a ZCode marketplace, then install
 Sapper and start a fresh ZCode session. The plugin exposes MCP tools for task
-listing, inspection, creation and opening a native Pi terminal. Ask ZCode to
-list Sapper tasks as a first check. See `sapper/README.md` for limitations.
+listing, inspection, creation, graph facts and intents, and KB retrieval. ZCode
+provides the agent harness. Ask ZCode to list Sapper tasks as a first check.
+See `sapper/README.md` for limitations.
 
 The adapter uses the upstream graph, templates, KB, Commander/worker/watchdog
 scripts and explicitly loaded Pi-compatible Sapper skill. Its Pi extension

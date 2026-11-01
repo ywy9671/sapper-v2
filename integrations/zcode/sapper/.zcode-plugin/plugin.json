@@ -1,7 +1,7 @@
 {
   "name": "sapper",
-  "version": "0.1.0",
-  "description": "Operate isolated Sapper Pi tasks using the local Sapper service.",
+  "version": "0.2.0",
+  "description": "Use the ZCode agent harness with Sapper task graphs and knowledge.",
   "author": {"name": "Sapper contributors"},
   "license": "MIT",
   "skills": "./skills",

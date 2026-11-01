@@ -234,7 +234,9 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError('请填写任务目标，并检查字段长度')
                     if (RUNS / task).exists() or (RUNS / '.sessions' / task).exists():
                         return self.json_reply({'error': '任务 ID 已存在，请使用新的 ID'}, 409)
-                    container_ready()
+                    code, _, error = run('exec', CONTAINER, 'true')
+                    if code:
+                        raise RuntimeError('Sapper 容器未运行；请先启动 Docker 和 Sapper。' + (' ' + redact(error) if error else ''))
                     code, _, error = run('exec', '-e', f'SAPPER_TASK_ID={task}', CONTAINER,
                                          'bash', '/opt/sapper/docker/commander/create-task.sh')
                     if code:
